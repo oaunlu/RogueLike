@@ -11,28 +11,61 @@ public class PlayerController : MonoBehaviour
     public ContactFilter2D movementFilter;
     Vector2 movementInput;
     Rigidbody2D rigidbody;
-
+    Animator animator;
+    SpriteRenderer spriteRenderer;
     List<RaycastHit2D> castCollisions = new List<RaycastHit2D>();
 
     // Start is called before the first frame update
     void Start()
     {
         rigidbody = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     private void FixedUpdate() {
         // If movement input is not 0 try to move
-        if(movementInput != Vector2.zero) {
+        if (movementInput != Vector2.zero) {
             // Check for potential collisions
+            bool success = TryMove(movementInput);
+
+            if (!success) {
+                success = TryMove(new Vector2(movementInput.x, 0));
+            }
+            if (!success) {
+                success = TryMove(new Vector2(0, movementInput.y));
+            }
+
+            animator.SetBool("isMoving", success);
+        } else {
+            animator.SetBool("isMoving", false);
+        }
+
+        // Set the direction of sprite to movement direction
+        if (movementInput.x < 0) {
+            spriteRenderer.flipX = true;
+        } else if (movementInput.x > 0) {
+            spriteRenderer.flipX = false;
+        }
+    }
+
+    private bool TryMove(Vector2 direction) {
+        if (direction != Vector2.zero) {
             int count = rigidbody.Cast(
-                movementInput, // X and Y values between -1 and 1 that represent the direction from the body to look for collisions
+                direction, // X and Y values between -1 and 1 that represent the direction from the body to look for collisions
                 movementFilter, // The settings that determine where a collision can occur on such as layers can collide with
                 castCollisions, // List of collisions to store the found collisions into after the Cast is finished
                 moveSpeed * Time.fixedDeltaTime + collisionOffset // The amount to cast equal to the movement plus an offset
             );
-            if(count == 0) {
-                rigidbody.MovePosition(rigidbody.position + movementInput * moveSpeed * Time.fixedDeltaTime);
+            if (count == 0) {
+                rigidbody.MovePosition(rigidbody.position + direction * moveSpeed * Time.fixedDeltaTime);
+                return true;
+            } else {
+                return false;
             }
+        } else {
+            // Can't move if there's no direction to move in
+            return false;
         }
     }
 
