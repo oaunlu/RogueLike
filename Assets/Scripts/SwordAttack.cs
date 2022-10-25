@@ -4,24 +4,24 @@ using UnityEngine;
 
 public class SwordAttack : MonoBehaviour
 {
+    public float damage = 3;
+    public Collider2D swordCollider;
     Vector2 rightAttackOffset;
-    Collider2D swordCollider;
 
     // Start is called before the first frame update
     private void Start()
     {
-        swordCollider = GetComponent<Collider2D>();
         rightAttackOffset = transform.position;
     }
 
     public void AttackRight() {
         swordCollider.enabled = true;
-        transform.position = rightAttackOffset;
+        transform.localPosition = rightAttackOffset;
     }
 
     public void AttackLeft() {
         swordCollider.enabled = true;
-        transform.position = new Vector2(rightAttackOffset.x * -1, rightAttackOffset.y);
+        transform.localPosition = new Vector2(rightAttackOffset.x * -1, rightAttackOffset.y);
     }
 
     public void StopAttack() {
@@ -32,6 +32,9 @@ public class SwordAttack : MonoBehaviour
     {
         if (other.tag == "Enemy") {
             // Deal damage to the enemy
+            Enemy enemy = GetComponent<Enemy>();
+
+            if (enemy != null) enemy.TakeDamage(damage);
         }
     }
 }
